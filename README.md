@@ -1,5 +1,7 @@
 # gocraft/dbr (database records) [![GoDoc](https://godoc.org/github.com/gocraft/web?status.png)](https://godoc.org/github.com/gocraft/dbr)
 
+> This fork contains improvements to support returnings IDs from postgres, and to support generation of column name field helpers.
+
 gocraft/dbr provides additions to Go's database/sql for super fast performance and convenience.
 
 ## Getting Started
