@@ -68,13 +68,15 @@ func (g *Generator) Generate() error {
 
 		fmt.Fprintf(buf, "package %s\n", pkgName)
 		fmt.Fprintf(buf, "import \"github.com/gocraft/dbr/types\"\n")
+		fmt.Fprintf(buf, "var (")
 		for i := 0; i < v.NumField(); i++ {
 			f := v.Field(i)
 			name := snakecaseUpper(f.Name)
 			fieldName := dbFieldname(f)
 			fieldType := convertFieldType(f.Type)
-			fmt.Fprintf(buf, "var %s = %s(%q)\n", name, fieldType, fieldName)
+			fmt.Fprintf(buf, "  %s = %s(%q)\n", name, fieldType, fieldName)
 		}
+		fmt.Fprintf(buf, ")")
 
 		dir := filepath.Join(g.baseDir, pkgName)
 		err := os.MkdirAll(dir, 0777)
