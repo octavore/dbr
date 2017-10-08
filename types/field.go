@@ -22,7 +22,7 @@ func (f *Field) Null() string {
 	return fmt.Sprintf("%s is null", f.name)
 }
 
-func (f *Field) As(val int64) (string, int64) {
+func (f *Field) As(val interface{}) (string, interface{}) {
 	return f.name, val
 }
 

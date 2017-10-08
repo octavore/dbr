@@ -10,6 +10,10 @@ func NewInt64Field(name string) *Int64Field {
 	return &Int64Field{Field{name}}
 }
 
+func (f *Int64Field) As(val int64) (string, int64) {
+	return f.name, val
+}
+
 func (f *Int64Field) Eq(val int64) (string, int64) {
 	return fmt.Sprintf("%s = ?", f.name), val
 }
