@@ -30,8 +30,15 @@ func NewTable(table string, t interface{}) (*Table, error) {
 	return tbl, nil
 }
 
+func (t *Table) colsWithName() (out []string) {
+	for _, col := range t.Columns {
+		out = append(out, t.Name+"."+col)
+	}
+	return
+}
+
 func (t *Table) Select(session SessionRunner) *SelectBuilder {
-	return session.Select(t.Columns...).From(t.Name)
+	return session.Select(t.colsWithName()...).From(t.Name)
 }
 
 func (t *Table) Update(session SessionRunner) *UpdateBuilder {
