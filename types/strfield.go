@@ -17,3 +17,7 @@ func (f *StrField) As(val string) (string, string) {
 func (f *StrField) Eq(val string) (string, string) {
 	return fmt.Sprintf("%s = ?", f.Full()), val
 }
+
+func (f *StrField) In(val []string) (string, []string) {
+	return fmt.Sprintf("%s IN ?", f.Full()), val
+}
