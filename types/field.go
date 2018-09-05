@@ -7,6 +7,10 @@ type Field struct {
 	name  string
 }
 
+type GetFielder interface {
+	GetField() *Field
+}
+
 func NewField(table, name string) *Field {
 	return &Field{table, name}
 }
@@ -47,6 +51,10 @@ func (f *Field) Asc() (string, bool) {
 	return f.Full(), true
 }
 
-func (f *Field) JoinF(g Field) (string, string) {
-	return f.table, fmt.Sprintf("%s = %s", f.Full(), g.Full())
+func (f *Field) On(g GetFielder) (string, string) {
+	return f.table, fmt.Sprintf("%s = %s", f.Full(), g.GetField().Full())
+}
+
+func (f *Field) GetField() *Field {
+	return f
 }
