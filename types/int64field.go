@@ -11,9 +11,9 @@ func NewInt64Field(table, name string) *Int64Field {
 }
 
 func (f *Int64Field) As(val int64) (string, int64) {
-	return f.name, val
+	return f.Full(), val
 }
 
 func (f *Int64Field) Eq(val int64) (string, int64) {
-	return fmt.Sprintf("%s = ?", f.name), val
+	return fmt.Sprintf("%s = ?", f.Full()), val
 }
