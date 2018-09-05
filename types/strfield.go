@@ -11,9 +11,9 @@ func NewStrField(table, name string) *StrField {
 }
 
 func (f *StrField) As(val string) (string, string) {
-	return f.name, val
+	return f.Full(), val
 }
 
 func (f *StrField) Eq(val string) (string, string) {
-	return fmt.Sprintf("%s = ?", f.name), val
+	return fmt.Sprintf("%s = ?", f.Full()), val
 }
