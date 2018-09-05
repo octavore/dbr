@@ -6,8 +6,8 @@ type StrField struct {
 	Field
 }
 
-func NewStrField(name string) *StrField {
-	return &StrField{Field{name}}
+func NewStrField(table, name string) *StrField {
+	return &StrField{Field{table, name}}
 }
 
 func (f *StrField) As(val string) (string, string) {

@@ -6,8 +6,8 @@ type Int64Field struct {
 	Field
 }
 
-func NewInt64Field(name string) *Int64Field {
-	return &Int64Field{Field{name}}
+func NewInt64Field(table, name string) *Int64Field {
+	return &Int64Field{Field{table, name}}
 }
 
 func (f *Int64Field) As(val int64) (string, int64) {
