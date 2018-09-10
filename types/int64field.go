@@ -11,7 +11,7 @@ func NewInt64Field(table, name string) *Int64Field {
 }
 
 func (f *Int64Field) As(val int64) (string, int64) {
-	return f.Full(), val
+	return f.name, val
 }
 
 func (f *Int64Field) Eq(val int64) (string, int64) {
