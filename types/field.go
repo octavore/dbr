@@ -28,7 +28,7 @@ func (f *Field) Null() string {
 }
 
 func (f *Field) As(val interface{}) (string, interface{}) {
-	return f.Full(), val
+	return f.name, val
 }
 
 func (f *Field) String() string {

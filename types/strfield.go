@@ -11,7 +11,7 @@ func NewStrField(table, name string) *StrField {
 }
 
 func (f *StrField) As(val string) (string, string) {
-	return f.Full(), val
+	return f.name, val
 }
 
 func (f *StrField) Eq(val string) (string, string) {
