@@ -19,7 +19,7 @@ func MustNewTable(table string, t interface{}) *Table {
 }
 
 func NewTable(table string, t interface{}) (*Table, error) {
-	tbl := &Table{Name: table}
+	tbl := &Table{Name: table, PrimaryKey: "id"}
 	v := reflect.ValueOf(t)
 	if v.Kind() != reflect.Struct {
 		return nil, ErrNotSupported
