@@ -13,4 +13,5 @@ type Dialect interface {
 	EncodeBytes(b []byte) string
 
 	Placeholder(n int) string
+	OnConflict(cols []string) (string, error)
 }

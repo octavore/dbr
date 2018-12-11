@@ -35,3 +35,10 @@ func (d postgreSQL) EncodeBytes(b []byte) string {
 func (d postgreSQL) Placeholder(n int) string {
 	return fmt.Sprintf("$%d", n+1)
 }
+
+func (d postgreSQL) OnConflict(cols []string) (string, error) {
+	if len(cols) == 0 {
+		return "", fmt.Errorf("no constraints specified")
+	}
+	return fmt.Sprintf(" ON CONFLICT (%s) DO ", strings.Join(cols, ", ")), nil
+}

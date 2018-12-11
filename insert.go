@@ -21,7 +21,11 @@ type InsertStmt struct {
 	Ignored      bool
 	ReturnColumn []string
 	RecordID     *int64
+
 	comments     Comments
+	onConflictCols      []string
+	onConflictStmt      *UpdateStmt
+	onConflictDoNothing bool
 }
 
 type InsertBuilder = InsertStmt
@@ -83,6 +87,23 @@ func (b *InsertStmt) Build(d Dialect, buf Buffer) error {
 				buf.WriteString(",")
 			}
 			buf.WriteString(d.QuoteIdent(col))
+		}
+	}
+
+	if b.onConflictStmt != nil || b.onConflictDoNothing {
+		onConflictStr, err := d.OnConflict(b.onConflictCols)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(onConflictStr)
+		if b.onConflictDoNothing {
+			// postgres specific hack
+			buf.WriteString(" NOTHING")
+		} else {
+			err = b.onConflictStmt.Build(d, buf)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -202,6 +223,18 @@ func (b *InsertStmt) Record(structValue interface{}) *InsertStmt {
 // Returning specifies the returning columns for postgres.
 func (b *InsertStmt) Returning(column ...string) *InsertStmt {
 	b.ReturnColumn = column
+	return b
+}
+
+// OnConflict is for building a ... ON CONFLICT UPDATE ... query
+func (b *InsertStmt) OnConflict(update *UpdateStmt, column ...string) *InsertStmt {
+	if update == nil {
+		b.onConflictDoNothing = true
+	} else {
+		b.onConflictStmt = update
+		b.onConflictStmt.allowTableless = true
+	}
+	b.onConflictCols = column
 	return b
 }
 
