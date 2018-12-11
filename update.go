@@ -18,6 +18,8 @@ type UpdateStmt struct {
 	Value      map[string]interface{}
 	WhereCond  []Builder
 	LimitCount int64
+
+	allowTableless bool // for use in ON CONFLICT
 }
 
 type UpdateBuilder = UpdateStmt
@@ -27,7 +29,7 @@ func (b *UpdateStmt) Build(d Dialect, buf Buffer) error {
 		return b.raw.Build(d, buf)
 	}
 
-	if b.Table == "" {
+	if b.Table == "" && !b.allowTableless {
 		return ErrTableNotSpecified
 	}
 
@@ -36,8 +38,12 @@ func (b *UpdateStmt) Build(d Dialect, buf Buffer) error {
 	}
 
 	buf.WriteString("UPDATE ")
-	buf.WriteString(d.QuoteIdent(b.Table))
-	buf.WriteString(" SET ")
+	if b.allowTableless && b.Table == "" {
+		buf.WriteString("SET ")
+	} else {
+		buf.WriteString(d.QuoteIdent(b.Table))
+		buf.WriteString(" SET ")
+	}
 
 	i := 0
 	for col, v := range b.Value {

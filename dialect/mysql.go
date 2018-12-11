@@ -64,3 +64,7 @@ func (d mysql) EncodeBytes(b []byte) string {
 func (d mysql) Placeholder(_ int) string {
 	return "?"
 }
+
+func (d mysql) OnConflict(cols []string) (string, error) {
+	return "", fmt.Errorf("not supported")
+}
