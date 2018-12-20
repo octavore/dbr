@@ -80,16 +80,6 @@ func (b *InsertStmt) Build(d Dialect, buf Buffer) error {
 		buf.WriteValue(tuple...)
 	}
 
-	if len(b.ReturnColumn) > 0 {
-		buf.WriteString(" RETURNING ")
-		for i, col := range b.ReturnColumn {
-			if i > 0 {
-				buf.WriteString(",")
-			}
-			buf.WriteString(d.QuoteIdent(col))
-		}
-	}
-
 	if b.onConflictStmt != nil || b.onConflictDoNothing {
 		onConflictStr, err := d.OnConflict(b.onConflictCols)
 		if err != nil {
@@ -104,6 +94,16 @@ func (b *InsertStmt) Build(d Dialect, buf Buffer) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if len(b.ReturnColumn) > 0 {
+		buf.WriteString(" RETURNING ")
+		for i, col := range b.ReturnColumn {
+			if i > 0 {
+				buf.WriteString(",")
+			}
+			buf.WriteString(d.QuoteIdent(col))
 		}
 	}
 
