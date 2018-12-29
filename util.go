@@ -47,22 +47,27 @@ var (
 	typeValuer = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
 )
 
+type tagInfo struct {
+	tag  string
+	name string
+}
+
 type tagStore struct {
-	m map[reflect.Type][]string
+	m map[reflect.Type][]tagInfo
 }
 
 func newTagStore() *tagStore {
 	return &tagStore{
-		m: make(map[reflect.Type][]string),
+		m: make(map[reflect.Type][]tagInfo),
 	}
 }
 
-func (s *tagStore) get(t reflect.Type) []string {
+func (s *tagStore) get(t reflect.Type) []tagInfo {
 	if t.Kind() != reflect.Struct {
 		return nil
 	}
 	if _, ok := s.m[t]; !ok {
-		l := make([]string, t.NumField())
+		l := make([]tagInfo, t.NumField())
 		for i := 0; i < t.NumField(); i++ {
 			field := t.Field(i)
 			if field.PkgPath != "" && !field.Anonymous {
@@ -70,15 +75,16 @@ func (s *tagStore) get(t reflect.Type) []string {
 				continue
 			}
 			tag := field.Tag.Get("db")
+			fieldName := tag
 			if tag == "-" {
 				// ignore
 				continue
 			}
-			if tag == "" {
-				// no tag, but we can record the field name
-				tag = NameMapping(field.Name)
+			if fieldName == "" {
+				// no fieldName from tag, but we can record the field name
+				fieldName = NameMapping(field.Name)
 			}
-			l[i] = tag
+			l[i] = tagInfo{tag: tag, name: fieldName}
 		}
 		s.m[t] = l
 	}
@@ -92,7 +98,7 @@ func (s *tagStore) findPtr(value reflect.Value, name []string, ptr []interface{}
 	}
 	switch value.Kind() {
 	case reflect.Struct:
-		s.findValueByName(value, name, ptr, true)
+		s.findValueByName(value, name, ptr, true, nil)
 		return nil
 	case reflect.Ptr:
 		if value.IsNil() {
@@ -105,26 +111,33 @@ func (s *tagStore) findPtr(value reflect.Value, name []string, ptr []interface{}
 	}
 }
 
-func (s *tagStore) findValueByName(value reflect.Value, name []string, ret []interface{}, retPtr bool) {
+func (s *tagStore) findValueByName(value reflect.Value, name []string, ret []interface{}, retPtr bool, prefix *string) {
 	if value.Type().Implements(typeValuer) {
 		return
 	}
 	switch value.Kind() {
 	case reflect.Ptr:
+		// embedded ptr
 		if value.IsNil() {
 			return
 		}
-		s.findValueByName(value.Elem(), name, ret, retPtr)
+		s.findValueByName(value.Elem(), name, ret, retPtr, prefix)
 	case reflect.Struct:
+		// embedded type
 		l := s.get(value.Type())
 		for i := 0; i < value.NumField(); i++ {
-			tag := l[i]
-			if tag == "" {
+			tagInfo := l[i]
+			if tagInfo.name == "" {
 				continue
 			}
 			fieldValue := value.Field(i)
+
+			queryColName := tagInfo.name
+			if prefix != nil {
+				queryColName = *prefix + "___" + tagInfo.name
+			}
 			for i, want := range name {
-				if want != tag {
+				if want != queryColName {
 					continue
 				}
 				if ret[i] == nil {
@@ -135,7 +148,11 @@ func (s *tagStore) findValueByName(value reflect.Value, name []string, ret []int
 					}
 				}
 			}
-			s.findValueByName(fieldValue, name, ret, retPtr)
+			var newPrefix *string
+			if tagInfo.tag != "" {
+				newPrefix = &tagInfo.tag
+			}
+			s.findValueByName(fieldValue, name, ret, retPtr, newPrefix)
 		}
 	}
 }
