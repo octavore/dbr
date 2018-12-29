@@ -1,6 +1,7 @@
 package dbr
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -31,15 +32,22 @@ func NewTable(table string, t interface{}) (*Table, error) {
 	return tbl, nil
 }
 
-func (t *Table) colsWithName() (out []string) {
+func (t *Table) ColsWithName() (out []string) {
 	for _, col := range t.Columns {
 		out = append(out, t.Name+"."+col)
 	}
 	return
 }
 
+func (t *Table) ColsWithPrefix(prefix string) (out []string) {
+	for _, col := range t.Columns {
+		out = append(out, fmt.Sprintf("%s.%s AS %s___%s", t.Name, col, prefix, col))
+	}
+	return
+}
+
 func (t *Table) Select(session SessionRunner) *SelectBuilder {
-	return session.Select(t.colsWithName()...).From(t.Name)
+	return session.Select(t.ColsWithName()...).From(t.Name)
 }
 
 func (t *Table) Update(session SessionRunner) *UpdateBuilder {
