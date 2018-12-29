@@ -174,7 +174,7 @@ func (b *InsertStmt) Record(structValue interface{}) *InsertStmt {
 		found := make([]interface{}, len(b.Column)+1)
 		// ID is recommended by golint here
 		s := newTagStore()
-		s.findValueByName(v, append(b.Column, "id"), found, false)
+		s.findValueByName(v, append(b.Column, "id"), found, false, nil)
 
 		value := found[:len(found)-1]
 		for i, v := range value {
