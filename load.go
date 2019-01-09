@@ -31,11 +31,11 @@ func InterfaceLoader(value interface{}, concreteType interface{}) interface{} {
 func Load(rows *sql.Rows, value interface{}) (int, error) {
 	defer rows.Close()
 
-	column, err := rows.Columns()
+	columns, err := rows.Columns()
 	if err != nil {
 		return 0, err
 	}
-	ptr := make([]interface{}, len(column))
+	ptr := make([]interface{}, len(columns))
 
 	var v reflect.Value
 	var elemType reflect.Type
@@ -75,17 +75,17 @@ func Load(rows *sql.Rows, value interface{}) (int, error) {
 		}
 
 		if isMap {
-			err := s.findPtr(elem, column[1:], ptr[1:])
+			err := s.findPtr(elem, columns[1:], ptr[1:])
 			if err != nil {
 				return 0, err
 			}
 			keyElem = reflectAlloc(v.Type().Key())
-			err = s.findPtr(keyElem, column[:1], ptr[:1])
+			err = s.findPtr(keyElem, columns[:1], ptr[:1])
 			if err != nil {
 				return 0, err
 			}
 		} else {
-			err := s.findPtr(elem, column, ptr)
+			err := s.findPtr(elem, columns, ptr)
 			if err != nil {
 				return 0, err
 			}
