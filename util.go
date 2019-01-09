@@ -92,10 +92,12 @@ func (s *tagStore) get(t reflect.Type) []tagInfo {
 }
 
 func (s *tagStore) findPtr(value reflect.Value, name []string, ptr []interface{}) error {
+	// single value
 	if value.CanAddr() && value.Addr().Type().Implements(typeScanner) {
 		ptr[0] = value.Addr().Interface()
 		return nil
 	}
+	// loading a struct
 	switch value.Kind() {
 	case reflect.Struct:
 		s.findValueByName(value, name, ptr, true, nil)
@@ -115,44 +117,72 @@ func (s *tagStore) findValueByName(value reflect.Value, name []string, ret []int
 	if value.Type().Implements(typeValuer) {
 		return
 	}
-	switch value.Kind() {
-	case reflect.Ptr:
-		// embedded ptr
-		if value.IsNil() {
+	var originalValue *reflect.Value
+	if value.Kind() == reflect.Ptr {
+		if !value.IsNil() {
+			// embedded ptr, initialized: recurse
+			s.findValueByName(value.Elem(), name, ret, retPtr, prefix)
 			return
 		}
-		s.findValueByName(value.Elem(), name, ret, retPtr, prefix)
-	case reflect.Struct:
-		// embedded type
-		l := s.get(value.Type())
-		for i := 0; i < value.NumField(); i++ {
-			tagInfo := l[i]
-			if tagInfo.name == "" {
+		// embedded ptr, not initialized: don't recurse, and use lazy value scanner
+		valueCopy := value
+		originalValue = &valueCopy
+		value = reflect.New(value.Type().Elem()).Elem()
+	}
+
+	if value.Kind() != reflect.Struct {
+		return
+	}
+
+	// embedded type
+	l := s.get(value.Type())
+	for i := 0; i < value.NumField(); i++ {
+		tagInfo := l[i]
+		if tagInfo.name == "" {
+			continue
+		}
+		fieldValue := value.Field(i)
+
+		queryColName := tagInfo.name
+		if prefix != nil {
+			queryColName = *prefix + "___" + tagInfo.name
+		}
+		for j, want := range name {
+			if want != queryColName {
 				continue
 			}
-			fieldValue := value.Field(i)
-
-			queryColName := tagInfo.name
-			if prefix != nil {
-				queryColName = *prefix + "___" + tagInfo.name
-			}
-			for i, want := range name {
-				if want != queryColName {
-					continue
-				}
-				if ret[i] == nil {
-					if retPtr {
-						ret[i] = fieldValue.Addr().Interface()
-					} else {
-						ret[i] = fieldValue
-					}
+			if ret[j] == nil {
+				if originalValue != nil {
+					ret[j] = &lazyScanner{originalValue: *originalValue, lazyValue: value, fieldIndex: i}
+				} else if retPtr {
+					ret[j] = fieldValue.Addr().Interface()
+				} else {
+					ret[j] = fieldValue
 				}
 			}
-			var newPrefix *string
-			if tagInfo.tag != "" {
-				newPrefix = &tagInfo.tag
-			}
-			s.findValueByName(fieldValue, name, ret, retPtr, newPrefix)
 		}
+		var newPrefix *string
+		if tagInfo.tag != "" {
+			newPrefix = &tagInfo.tag
+		}
+		s.findValueByName(fieldValue, name, ret, retPtr, newPrefix)
 	}
+}
+
+type lazyScanner struct {
+	originalValue reflect.Value // original ptr to nil
+	lazyValue     reflect.Value // actual value
+	fieldIndex    int
+}
+
+func (l *lazyScanner) Scan(val interface{}) error {
+	if val == nil {
+		// if we haven't initialized yet, return nil
+		return nil
+	}
+	if l.originalValue.IsNil() {
+		l.originalValue.Set(l.lazyValue.Addr())
+	}
+	fieldVal := l.lazyValue.Field(l.fieldIndex)
+	return convertAssign(fieldVal.Addr().Interface(), val)
 }

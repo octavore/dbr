@@ -4,11 +4,13 @@
 
 > This fork also contains support for fetching embedded structs without conflict. If the embedded struct has a db tag, then the requested column with be "{embedded stuct tag}\_\_\_{embedded struct's field's name}". The ColsWithPrefix
 > helps to generate the columns to request.
+>
+> Embedded structs can be made optional with pointers and a LEFT JOIN.
 
 ```
 type EmployeeWithUser struct {
 	models.Employee `db:"employees"`
-	*models.User    `db:"users"`
+	*models.User    `db:"users"
 }
 
 func myFunc(employeesTable *dbr.Table, usersTable *dbr.Table) {
@@ -16,7 +18,9 @@ func myFunc(employeesTable *dbr.Table, usersTable *dbr.Table) {
 	cols = append(cols, employeesTable.ColsWithPrefix("employees")...)
 	cols = append(cols, usersTable.ColsWithPrefix("users")...)
 
+	e := &EmployeeWithUser{}
 	tx.Select(cols...) # rest of the query with the appropriate join goes here
+		.LoadOne(e)
 }
 ```
 
