@@ -18,6 +18,14 @@ func (f *Int64Field) Eq(val int64) (string, int64) {
 	return fmt.Sprintf("%s = ?", f.Full()), val
 }
 
+func (f *Int64Field) Neq(val int64) (string, int64) {
+	return fmt.Sprintf("%s != ?", f.Full()), val
+}
+
 func (f *Int64Field) In(val []int64) (string, []int64) {
 	return fmt.Sprintf("%s IN ?", f.Full()), val
+}
+
+func (f *Int64Field) NOtIn(val []int64) (string, []int64) {
+	return fmt.Sprintf("%s NOT IN ?", f.Full()), val
 }
