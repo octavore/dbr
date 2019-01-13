@@ -26,6 +26,6 @@ func (f *Int64Field) In(val []int64) (string, []int64) {
 	return fmt.Sprintf("%s IN ?", f.Full()), val
 }
 
-func (f *Int64Field) NOtIn(val []int64) (string, []int64) {
+func (f *Int64Field) NotIn(val []int64) (string, []int64) {
 	return fmt.Sprintf("%s NOT IN ?", f.Full()), val
 }
