@@ -39,6 +39,10 @@ func (f *Field) Alias(alias string) string {
 	return fmt.Sprintf("%s.%s", alias, f.name)
 }
 
+func (f *Field) AsAlias(alias string) string {
+	return f.Full() + " AS " + alias
+}
+
 func (f *Field) Full() string {
 	return f.Alias(f.table)
 }
