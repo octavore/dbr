@@ -16,6 +16,7 @@ type UpdateStmt struct {
 
 	Table      string
 	Value      map[string]interface{}
+	FromTable  string
 	WhereCond  []Builder
 	LimitCount int64
 
@@ -56,6 +57,11 @@ func (b *UpdateStmt) Build(d Dialect, buf Buffer) error {
 
 		buf.WriteValue(v)
 		i++
+	}
+
+	if b.FromTable != "" {
+		buf.WriteString(" FROM ")
+		buf.WriteString(d.QuoteIdent(b.FromTable))
 	}
 
 	if len(b.WhereCond) > 0 {
@@ -154,6 +160,11 @@ func (b *UpdateStmt) SetMap(m map[string]interface{}) *UpdateStmt {
 	for col, val := range m {
 		b.Set(col, val)
 	}
+	return b
+}
+
+func (b *UpdateStmt) From(tbl string) *UpdateStmt {
+	b.FromTable = tbl
 	return b
 }
 
