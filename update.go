@@ -14,12 +14,14 @@ type UpdateStmt struct {
 
 	raw
 
-	Table          string
-	Value          map[string]interface{}
-	WhereCond      []Builder
-	ReturnColumn   []string
-	LimitCount     int64
-	comments       Comments
+	Table        string
+	Value        map[string]interface{}
+	WhereCond    []Builder
+	FromTable    string
+	ReturnColumn []string
+	LimitCount   int64
+	comments     Comments
+
 	allowTableless bool // for use in ON CONFLICT
 }
 
@@ -63,6 +65,11 @@ func (b *UpdateStmt) Build(d Dialect, buf Buffer) error {
 		buf.WriteValue(v)
 
 		i++
+	}
+
+	if b.FromTable != "" {
+		buf.WriteString(" FROM ")
+		buf.WriteString(d.QuoteIdent(b.FromTable))
 	}
 
 	if len(b.WhereCond) > 0 {
@@ -189,6 +196,11 @@ func (b *UpdateStmt) IncrBy(column string, value interface{}) *UpdateStmt {
 // DecrBy decreases column by value
 func (b *UpdateStmt) DecrBy(column string, value interface{}) *UpdateStmt {
 	b.Value[column] = Expr("? - ?", I(column), value)
+	return b
+}
+
+func (b *UpdateStmt) From(tbl string) *UpdateStmt {
+	b.FromTable = tbl
 	return b
 }
 
